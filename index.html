@@ -292,7 +292,24 @@
     }
 
 
-    function addOrderItem(item) {
+    function addOrderItem(item) {function changeOrderQuantity(itemId, change) {
+
+  const item = currentOrder.find(
+    orderItem => orderItem.id === itemId
+  );
+
+  if (!item) return;
+
+  item.quantity += change;
+
+  if (item.quantity <= 0) {
+    currentOrder = currentOrder.filter(
+      orderItem => orderItem.id !== itemId
+    );
+  }
+
+  updateOrderDisplay();
+}
 
       const existing =
         currentOrder.find(
