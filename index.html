@@ -50,6 +50,37 @@
       margin-bottom: 15px;
       color: #555;
     }
+
+    #menu {
+      display: none;
+      margin-top: 20px;
+    }
+
+    .menu-item {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 10px;
+    }
+
+    .menu-name {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .menu-price {
+      margin-top: 5px;
+      color: #555;
+    }
+
+    #backButton {
+      margin-bottom: 15px;
+      padding: 10px 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: white;
+    }
   </style>
 </head>
 
@@ -61,8 +92,18 @@
 
   <div id="tables"></div>
 
+  <div id="menu">
+    <button id="backButton">← 卓一覧に戻る</button>
+
+    <h2 id="selectedTable"></h2>
+
+    <div id="menuItems"></div>
+  </div>
+
   <script>
     const SUPABASE_URL = "https://yqyypzqoyhdwuywctyot.supabase.co";
+
+    // 今GitHubに入っている実際のキーをここに入れる
     const SUPABASE_ANON_KEY = "sb_publishable_XtBKEaxbFBAIVk4XMNSSjg_Fq4GAGZe";
 
     const supabaseClient =
@@ -70,6 +111,8 @@
         SUPABASE_URL,
         SUPABASE_ANON_KEY
       );
+
+    let selectedTable = null;
 
     async function loadTables() {
       const { data, error } = await supabaseClient
@@ -96,8 +139,7 @@
         `;
 
         div.addEventListener("click", () => {
-          document.getElementById("message").textContent =
-            `卓 ${table.table_no} を選択しました`;
+          openMenu(table);
         });
 
         container.appendChild(div);
@@ -106,6 +148,65 @@
       document.getElementById("message").textContent =
         `${data.length}卓を読み込みました`;
     }
+
+    async function openMenu(table) {
+      selectedTable = table;
+
+      document.getElementById("tables").style.display = "none";
+      document.getElementById("menu").style.display = "block";
+
+      document.getElementById("selectedTable").textContent =
+        `卓 ${table.table_no} の注文`;
+
+      document.getElementById("message").textContent =
+        "Supabaseからメニューを読み込み中…";
+
+      const { data, error } = await supabaseClient
+        .from("menu_items")
+        .select("id, name, category, size, price")
+        .eq("active", true)
+        .order("id");
+
+      if (error) {
+        document.getElementById("message").textContent =
+          "メニュー取得エラー: " + error.message;
+        return;
+      }
+
+      const container = document.getElementById("menuItems");
+      container.innerHTML = "";
+
+      data.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "menu-item";
+
+        const sizeText = item.size
+          ? ` ${item.size}`
+          : "";
+
+        div.innerHTML = `
+          <div class="menu-name">
+            ${item.name}${sizeText}
+          </div>
+          <div class="menu-price">
+            ¥${item.price.toLocaleString()}
+          </div>
+        `;
+
+        container.appendChild(div);
+      });
+
+      document.getElementById("message").textContent =
+        `${data.length}品を読み込みました`;
+    }
+
+    document.getElementById("backButton").addEventListener("click", () => {
+      document.getElementById("menu").style.display = "none";
+      document.getElementById("tables").style.display = "grid";
+
+      document.getElementById("message").textContent =
+        "卓を選択してください";
+    });
 
     loadTables();
   </script>
