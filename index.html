@@ -344,7 +344,16 @@
     }
 
 
-    function updateOrderDisplay() {
+    function updateOrderDisplay() {row.innerHTML = `
+  <span>
+    ${item.name}${sizeText}
+    × ${item.quantity}
+  </span>
+
+  <span>
+    ¥${subtotal.toLocaleString()}
+  </span>
+`;
 
       const container =
         document.getElementById("orderItems");
