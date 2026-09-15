@@ -32,6 +32,12 @@
       padding: 20px;
       text-align: center;
       font-size: 20px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .table:active {
+      transform: scale(0.98);
     }
 
     .status {
@@ -88,6 +94,11 @@
           <div>卓 ${table.table_no}</div>
           <div class="status">${table.status}</div>
         `;
+
+        div.addEventListener("click", () => {
+          document.getElementById("message").textContent =
+            `卓 ${table.table_no} を選択しました`;
+        });
 
         container.appendChild(div);
       });
