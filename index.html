@@ -36,8 +36,9 @@ cursor: pointer;
 user-select: none;
 }
 
-.table:active,
-.menu-item:active {
+    .table:active {
+    .table:active,
+    .menu-item:active {
 transform: scale(0.98);
 }
 
@@ -63,8 +64,8 @@ border: 1px solid #ddd;
 border-radius: 10px;
 padding: 15px;
 margin-bottom: 10px;
-cursor: pointer;
-user-select: none;
+      cursor: pointer;
+      user-select: none;
 }
 
 .menu-name {
@@ -77,30 +78,30 @@ margin-top: 5px;
 color: #555;
 }
 
-#order {
-margin-top: 20px;
-background: white;
-border-radius: 10px;
-padding: 15px;
-}
+    #order {
+      margin-top: 20px;
+      background: white;
+      border-radius: 10px;
+      padding: 15px;
+    }
 
-#order h3 {
-margin-top: 0;
-}
+    #order h3 {
+      margin-top: 0;
+    }
 
-.order-row {
-display: flex;
-justify-content: space-between;
-padding: 8px 0;
-border-bottom: 1px solid #eee;
-}
+    .order-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+    }
 
-#orderTotal {
-margin-top: 15px;
-font-size: 20px;
-font-weight: bold;
-text-align: right;
-}
+    #orderTotal {
+      margin-top: 15px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: right;
+    }
 
 #backButton {
 margin-bottom: 15px;
@@ -108,7 +109,7 @@ padding: 10px 15px;
 border: 1px solid #ccc;
 border-radius: 8px;
 background: white;
-cursor: pointer;
+      cursor: pointer;
 }
 </style>
 </head>
@@ -129,28 +130,31 @@ cursor: pointer;
 
 <div id="menuItems"></div>
 
-<div id="order">
-<h3>注文内容</h3>
+    <div id="order">
+      <h3>注文内容</h3>
 
-<div id="orderItems">
-まだ注文はありません
-</div>
+      <div id="orderItems">
+        まだ注文はありません
+      </div>
 
-<div id="orderTotal">
-合計 ¥0
-</div>
-</div>
+      <div id="orderTotal">
+        合計 ¥0
+      </div>
+    </div>
 
 </div>
 
 <script>
+    const SUPABASE_URL = "https://yqyypzqoyhdwuywctyot.supabase.co";
 
-const SUPABASE_URL =
-"https://yqyypzqoyhdwuywctyot.supabase.co";
+    // 今GitHubに入っている実際のキーをここに入れる
+    const SUPABASE_ANON_KEY = "sb_publishable_XtBKEaxbFBAIVk4XMNSSjg_Fq4GAGZe";
+    const SUPABASE_URL =
+      "https://yqyypzqoyhdwuywctyot.supabase.co";
 
-// 今まで使っている実際のキーをここに入れる
-const SUPABASE_ANON_KEY =
-"sb_publishable_XtBKEaxbFBAIVk4XMNSSjg_Fq4GAGZe";
+    // 今まで使っている実際のキーをここに入れる
+    const SUPABASE_ANON_KEY =
+      "sb_publishable_XtBKEaxbFBAIVk4XMNSSjg_Fq4GAGZe";
 
 const supabaseClient =
 window.supabase.createClient(
@@ -160,16 +164,20 @@ SUPABASE_ANON_KEY
 
 let selectedTable = null;
 
-// 画面上だけで管理する注文
-let currentOrder = [];
+    // 画面上だけで管理する注文
+    let currentOrder = [];
 
 async function loadTables() {
+      const { data, error } = await supabaseClient
+        .from("shop_tables")
+        .select("id, table_no, status")
+        .order("table_no");
 
-const { data, error } =
-await supabaseClient
-.from("shop_tables")
-.select("id, table_no, status")
-.order("table_no");
+      const { data, error } =
+        await supabaseClient
+          .from("shop_tables")
+          .select("id, table_no, status")
+          .order("table_no");
 
 if (error) {
 
@@ -179,22 +187,24 @@ document.getElementById("message").textContent =
 return;
 }
 
-const container =
-document.getElementById("tables");
+      const container = document.getElementById("tables");
+      const container =
+        document.getElementById("tables");
 
 container.innerHTML = "";
 
 data.forEach(table => {
+        const div = document.createElement("div");
 
-const div =
-document.createElement("div");
+        const div =
+          document.createElement("div");
 
 div.className = "table";
 
 div.innerHTML = `
-<div>卓 ${table.table_no}</div>
-<div class="status">${table.status}</div>
-`;
+         <div>卓 ${table.table_no}</div>
+         <div class="status">${table.status}</div>
+       `;
 
 div.addEventListener("click", () => {
 openMenu(table);
@@ -213,13 +223,15 @@ async function openMenu(table) {
 
 selectedTable = table;
 
-currentOrder = [];
+      document.getElementById("tables").style.display = "none";
+      document.getElementById("menu").style.display = "block";
+      currentOrder = [];
 
-document.getElementById("tables").style.display =
-"none";
+      document.getElementById("tables").style.display =
+        "none";
 
-document.getElementById("menu").style.display =
-"block";
+      document.getElementById("menu").style.display =
+        "block";
 
 document.getElementById("selectedTable").textContent =
 `卓 ${table.table_no} の注文`;
@@ -227,15 +239,20 @@ document.getElementById("selectedTable").textContent =
 document.getElementById("message").textContent =
 "Supabaseからメニューを読み込み中…";
 
-updateOrderDisplay();
+      const { data, error } = await supabaseClient
+        .from("menu_items")
+        .select("id, name, category, size, price")
+        .eq("active", true)
+        .order("id");
+      updateOrderDisplay();
 
 
-const { data, error } =
-await supabaseClient
-.from("menu_items")
-.select("id, name, category, size, price")
-.eq("active", true)
-.order("id");
+      const { data, error } =
+        await supabaseClient
+          .from("menu_items")
+          .select("id, name, category, size, price")
+          .eq("active", true)
+          .order("id");
 
 
 if (error) {
@@ -246,40 +263,45 @@ document.getElementById("message").textContent =
 return;
 }
 
+      const container = document.getElementById("menuItems");
 
-const container =
-document.getElementById("menuItems");
+      const container =
+        document.getElementById("menuItems");
 
 container.innerHTML = "";
 
 
 data.forEach(item => {
+        const div = document.createElement("div");
 
-const div =
-document.createElement("div");
+        const div =
+          document.createElement("div");
 
 div.className = "menu-item";
 
-const sizeText =
-item.size ? ` ${item.size}` : "";
+        const sizeText = item.size
+          ? ` ${item.size}`
+          : "";
+        const sizeText =
+          item.size ? ` ${item.size}` : "";
 
 div.innerHTML = `
-<div class="menu-name">
-${item.name}${sizeText}
-</div>
+         <div class="menu-name">
+           ${item.name}${sizeText}
+         </div>
 
-<div class="menu-price">
-¥${item.price.toLocaleString()}
-</div>
-`;
+         <div class="menu-price">
+           ¥${item.price.toLocaleString()}
+         </div>
+       `;
 
 
-// ★ メニュー選択
-div.addEventListener("click", () => {
+        // ★ メニュー選択
+        div.addEventListener("click", () => {
 
-addOrderItem(item);
+          addOrderItem(item);
 
-});
+        });
 
 
 container.appendChild(div);
@@ -291,29 +313,11 @@ document.getElementById("message").textContent =
 `${data.length}品を読み込みました`;
 }
 
+    document.getElementById("backButton").addEventListener("click", () => {
+      document.getElementById("menu").style.display = "none";
+      document.getElementById("tables").style.display = "grid";
 
-    function addOrderItem(item) {function changeOrderQuantity(itemId, change) {
-function addOrderItem(item) {
-
-  const item = currentOrder.find(
-    orderItem => orderItem.id === itemId
-  );
-
-  if (!item) return;
-
-  item.quantity += change;
-
-  if (item.quantity <= 0) {
-    currentOrder = currentOrder.filter(
-      orderItem => orderItem.id !== itemId
-  const existing =
-    currentOrder.find(
-      orderItem => orderItem.id === item.id
-);
-  }
-
-  updateOrderDisplay();
-}
+    function addOrderItem(item) {
 
       const existing =
         currentOrder.find(
@@ -343,179 +347,101 @@ function addOrderItem(item) {
       updateOrderDisplay();
 
 
-      document.getElementById("message").textContent =
+document.getElementById("message").textContent =
+        "卓を選択してください";
+    });
         `${item.name}を追加しました`;
     }
 
-  if (existing) {
 
-    function updateOrderDisplay() {row.innerHTML = `
-  <span>
-    ${item.name}${sizeText}
-    × ${item.quantity}
-  </span>
-    existing.quantity += 1;
-
-  <span>
-    ¥${subtotal.toLocaleString()}
-  </span>
-`;
-  } else {
+    function updateOrderDisplay() {
 
       const container =
         document.getElementById("orderItems");
 
       const totalElement =
         document.getElementById("orderTotal");
-    currentOrder.push({
 
-      id: item.id,
-      name: item.name,
-      size: item.size,
-      price: item.price,
-      quantity: 1
 
       if (currentOrder.length === 0) {
-    });
 
         container.textContent =
           "まだ注文はありません";
 
         totalElement.textContent =
           "合計 ¥0";
-  }
 
         return;
       }
-  updateOrderDisplay();
 
-  document.getElementById("message").textContent =
-    `${item.name}を追加しました`;
-}
 
       container.innerHTML = "";
 
-function changeOrderQuantity(itemId, change) {
 
       let total = 0;
-  const item =
-    currentOrder.find(
-      orderItem => orderItem.id === itemId
-    );
 
-  if (!item) return;
 
       currentOrder.forEach(item => {
-  item.quantity += change;
 
         const subtotal =
           item.price * item.quantity;
-  if (item.quantity <= 0) {
 
         total += subtotal;
-    currentOrder =
-      currentOrder.filter(
-        orderItem => orderItem.id !== itemId
-      );
 
-  }
 
         const row =
           document.createElement("div");
-  updateOrderDisplay();
-}
 
         row.className = "order-row";
 
-function updateOrderDisplay() {
 
         const sizeText =
           item.size ? ` ${item.size}` : "";
-  const container =
-    document.getElementById("orderItems");
 
-  const totalElement =
-    document.getElementById("orderTotal");
 
         row.innerHTML = `
           <span>
             ${item.name}${sizeText}
             × ${item.quantity}
           </span>
-  if (currentOrder.length === 0) {
 
           <span>
             ¥${subtotal.toLocaleString()}
           </span>
         `;
-    container.textContent =
-      "まだ注文はありません";
 
-    totalElement.textContent =
-      "合計 ¥0";
 
         container.appendChild(row);
-    return;
-  }
 
       });
-  container.innerHTML = "";
 
-  let total = 0;
 
       totalElement.textContent =
         `合計 ¥${total.toLocaleString()}`;
     }
-  currentOrder.forEach(item => {
 
-    const subtotal =
-      item.price * item.quantity;
 
     document
       .getElementById("backButton")
       .addEventListener("click", () => {
-    total += subtotal;
 
         currentOrder = [];
-    const row =
-      document.createElement("div");
 
         document.getElementById("menu").style.display =
           "none";
-    row.className = "order-row";
 
         document.getElementById("tables").style.display =
           "grid";
-    const sizeText =
-      item.size ? ` ${item.size}` : "";
 
         document.getElementById("message").textContent =
           "卓を選択してください";
-    row.innerHTML = `
-      <span>
-        ${item.name}${sizeText}
-      </span>
 
       });
-      <span>
-        <button onclick="changeOrderQuantity(${item.id}, 1)">＋</button>
-        ${item.quantity}
-        <button onclick="changeOrderQuantity(${item.id}, -1)">−</button>
-      </span>
 
-      <span>
-        ¥${subtotal.toLocaleString()}
-      </span>
-    `;
 
-    loadTables();
-    container.appendChild(row);
+loadTables();
 
-  </script>
-  });
+</script>
 
 </body>
 </html>
-  totalElement.textContent =
-    `合計 ¥${total.toLocaleString()}`;
-}
