@@ -32,14 +32,12 @@ border-radius: 10px;
 padding: 20px;
 text-align: center;
 font-size: 20px;
-cursor: pointer;
-user-select: none;
-}
+      cursor: pointer;
+      user-select: none;
+    }
 
     .table:active {
-    .table:active,
-    .menu-item:active {
-transform: scale(0.98);
+      transform: scale(0.98);
 }
 
 .status {
@@ -52,65 +50,6 @@ color: #555;
 margin-bottom: 15px;
 color: #555;
 }
-
-#menu {
-display: none;
-margin-top: 20px;
-}
-
-.menu-item {
-background: white;
-border: 1px solid #ddd;
-border-radius: 10px;
-padding: 15px;
-margin-bottom: 10px;
-      cursor: pointer;
-      user-select: none;
-}
-
-.menu-name {
-font-size: 18px;
-font-weight: bold;
-}
-
-.menu-price {
-margin-top: 5px;
-color: #555;
-}
-
-    #order {
-      margin-top: 20px;
-      background: white;
-      border-radius: 10px;
-      padding: 15px;
-    }
-
-    #order h3 {
-      margin-top: 0;
-    }
-
-    .order-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid #eee;
-    }
-
-    #orderTotal {
-      margin-top: 15px;
-      font-size: 20px;
-      font-weight: bold;
-      text-align: right;
-    }
-
-#backButton {
-margin-bottom: 15px;
-padding: 10px 15px;
-border: 1px solid #ccc;
-border-radius: 8px;
-background: white;
-      cursor: pointer;
-}
 </style>
 </head>
 
@@ -122,39 +61,9 @@ background: white;
 
 <div id="tables"></div>
 
-<div id="menu">
-
-<button id="backButton">← 卓一覧に戻る</button>
-
-<h2 id="selectedTable"></h2>
-
-<div id="menuItems"></div>
-
-    <div id="order">
-      <h3>注文内容</h3>
-
-      <div id="orderItems">
-        まだ注文はありません
-      </div>
-
-      <div id="orderTotal">
-        合計 ¥0
-      </div>
-    </div>
-
-</div>
-
 <script>
-    const SUPABASE_URL = "https://yqyypzqoyhdwuywctyot.supabase.co";
-
-    // 今GitHubに入っている実際のキーをここに入れる
-    const SUPABASE_ANON_KEY = "sb_publishable_XtBKEaxbFBAIVk4XMNSSjg_Fq4GAGZe";
-    const SUPABASE_URL =
-      "https://yqyypzqoyhdwuywctyot.supabase.co";
-
-    // 今まで使っている実際のキーをここに入れる
-    const SUPABASE_ANON_KEY =
-      "sb_publishable_XtBKEaxbFBAIVk4XMNSSjg_Fq4GAGZe";
+const SUPABASE_URL = "https://yqyypzqoyhdwuywctyot.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_XtBKEaxbFBAIVk4XMNSSjg_Fq4GAGZe";
 
 const supabaseClient =
 window.supabase.createClient(
@@ -162,43 +71,23 @@ SUPABASE_URL,
 SUPABASE_ANON_KEY
 );
 
-let selectedTable = null;
-
-    // 画面上だけで管理する注文
-    let currentOrder = [];
-
 async function loadTables() {
-      const { data, error } = await supabaseClient
-        .from("shop_tables")
-        .select("id, table_no, status")
-        .order("table_no");
-
-      const { data, error } =
-        await supabaseClient
-          .from("shop_tables")
-          .select("id, table_no, status")
-          .order("table_no");
+const { data, error } = await supabaseClient
+.from("shop_tables")
+.select("id, table_no, status")
+.order("table_no");
 
 if (error) {
-
 document.getElementById("message").textContent =
 "Supabase接続エラー: " + error.message;
-
 return;
 }
 
-      const container = document.getElementById("tables");
-      const container =
-        document.getElementById("tables");
-
+const container = document.getElementById("tables");
 container.innerHTML = "";
 
 data.forEach(table => {
-        const div = document.createElement("div");
-
-        const div =
-          document.createElement("div");
-
+const div = document.createElement("div");
 div.className = "table";
 
 div.innerHTML = `
@@ -206,241 +95,19 @@ div.innerHTML = `
          <div class="status">${table.status}</div>
        `;
 
-div.addEventListener("click", () => {
-openMenu(table);
-});
+        div.addEventListener("click", () => {
+          document.getElementById("message").textContent =
+            `卓 ${table.table_no} を選択しました`;
+        });
 
 container.appendChild(div);
-
 });
 
 document.getElementById("message").textContent =
 `${data.length}卓を読み込みました`;
 }
 
-
-async function openMenu(table) {
-
-selectedTable = table;
-
-      document.getElementById("tables").style.display = "none";
-      document.getElementById("menu").style.display = "block";
-      currentOrder = [];
-
-      document.getElementById("tables").style.display =
-        "none";
-
-      document.getElementById("menu").style.display =
-        "block";
-
-document.getElementById("selectedTable").textContent =
-`卓 ${table.table_no} の注文`;
-
-document.getElementById("message").textContent =
-"Supabaseからメニューを読み込み中…";
-
-      const { data, error } = await supabaseClient
-        .from("menu_items")
-        .select("id, name, category, size, price")
-        .eq("active", true)
-        .order("id");
-      updateOrderDisplay();
-
-
-      const { data, error } =
-        await supabaseClient
-          .from("menu_items")
-          .select("id, name, category, size, price")
-          .eq("active", true)
-          .order("id");
-
-
-if (error) {
-
-document.getElementById("message").textContent =
-"メニュー取得エラー: " + error.message;
-
-return;
-}
-
-      const container = document.getElementById("menuItems");
-
-      const container =
-        document.getElementById("menuItems");
-
-container.innerHTML = "";
-
-
-data.forEach(item => {
-        const div = document.createElement("div");
-
-        const div =
-          document.createElement("div");
-
-div.className = "menu-item";
-
-        const sizeText = item.size
-          ? ` ${item.size}`
-          : "";
-        const sizeText =
-          item.size ? ` ${item.size}` : "";
-
-div.innerHTML = `
-         <div class="menu-name">
-           ${item.name}${sizeText}
-         </div>
-
-         <div class="menu-price">
-           ¥${item.price.toLocaleString()}
-         </div>
-       `;
-
-
-        // ★ メニュー選択
-        div.addEventListener("click", () => {
-
-          addOrderItem(item);
-
-        });
-
-
-container.appendChild(div);
-
-});
-
-
-document.getElementById("message").textContent =
-`${data.length}品を読み込みました`;
-}
-
-    document.getElementById("backButton").addEventListener("click", () => {
-      document.getElementById("menu").style.display = "none";
-      document.getElementById("tables").style.display = "grid";
-
-    function addOrderItem(item) {
-
-      const existing =
-        currentOrder.find(
-          orderItem => orderItem.id === item.id
-        );
-
-
-      if (existing) {
-
-        existing.quantity += 1;
-
-      } else {
-
-        currentOrder.push({
-
-          id: item.id,
-          name: item.name,
-          size: item.size,
-          price: item.price,
-          quantity: 1
-
-        });
-
-      }
-
-
-      updateOrderDisplay();
-
-
-document.getElementById("message").textContent =
-        "卓を選択してください";
-    });
-        `${item.name}を追加しました`;
-    }
-
-
-    function updateOrderDisplay() {
-
-      const container =
-        document.getElementById("orderItems");
-
-      const totalElement =
-        document.getElementById("orderTotal");
-
-
-      if (currentOrder.length === 0) {
-
-        container.textContent =
-          "まだ注文はありません";
-
-        totalElement.textContent =
-          "合計 ¥0";
-
-        return;
-      }
-
-
-      container.innerHTML = "";
-
-
-      let total = 0;
-
-
-      currentOrder.forEach(item => {
-
-        const subtotal =
-          item.price * item.quantity;
-
-        total += subtotal;
-
-
-        const row =
-          document.createElement("div");
-
-        row.className = "order-row";
-
-
-        const sizeText =
-          item.size ? ` ${item.size}` : "";
-
-
-        row.innerHTML = `
-          <span>
-            ${item.name}${sizeText}
-            × ${item.quantity}
-          </span>
-
-          <span>
-            ¥${subtotal.toLocaleString()}
-          </span>
-        `;
-
-
-        container.appendChild(row);
-
-      });
-
-
-      totalElement.textContent =
-        `合計 ¥${total.toLocaleString()}`;
-    }
-
-
-    document
-      .getElementById("backButton")
-      .addEventListener("click", () => {
-
-        currentOrder = [];
-
-        document.getElementById("menu").style.display =
-          "none";
-
-        document.getElementById("tables").style.display =
-          "grid";
-
-        document.getElementById("message").textContent =
-          "卓を選択してください";
-
-      });
-
-
 loadTables();
-
 </script>
 
 </body>
