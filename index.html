@@ -9,46 +9,69 @@
 
 <style>
 body {
-font-family: sans-serif;
-margin: 0;
-padding: 20px;
-background: #f5f5f5;
+  font-family: sans-serif;
+  margin: 0;
+  padding: 20px;
+  background: #f5f5f5;
 }
 
 h1 {
-margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
-#tables {
-display: grid;
-grid-template-columns: repeat(2, 1fr);
-gap: 12px;
+#tables,
+#menu {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
 
-.table {
-background: white;
-border: 1px solid #ddd;
-border-radius: 10px;
-padding: 20px;
-text-align: center;
-font-size: 20px;
-      cursor: pointer;
-      user-select: none;
-    }
+.table,
+.menu-item {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+}
 
-    .table:active {
-      transform: scale(0.98);
+.table:active,
+.menu-item:active {
+  transform: scale(0.98);
 }
 
 .status {
-margin-top: 8px;
-font-size: 14px;
-color: #555;
+  margin-top: 8px;
+  font-size: 14px;
+  color: #555;
 }
 
 #message {
-margin-bottom: 15px;
-color: #555;
+  margin-bottom: 15px;
+  color: #555;
+}
+
+#order-screen {
+  display: none;
+}
+
+.menu-item {
+  font-size: 16px;
+}
+
+.menu-price {
+  margin-top: 8px;
+  font-weight: bold;
+}
+
+button {
+  padding: 10px 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
 }
 </style>
 </head>
@@ -57,57 +80,192 @@ color: #555;
 
 <h1>SUN'S LUNCH POS</h1>
 
-<div id="message">Supabaseから卓情報を読み込み中…</div>
+<div id="message">
+  Supabaseから卓情報を読み込み中…
+</div>
 
-<div id="tables"></div>
+<div id="table-screen">
+  <div id="tables"></div>
+</div>
+
+<div id="order-screen">
+
+  <h2 id="selected-table"></h2>
+
+  <div id="menu">
+    メニューを読み込み中…
+  </div>
+
+  <br>
+
+  <button id="back-button">
+    卓一覧へ戻る
+  </button>
+
+</div>
 
 <script>
-const SUPABASE_URL = "https://yqyypzqoyhdwuywctyot.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_XtBKEaxbFBAIVk4XMNSSjg_Fq4GAGZe";
+
+const SUPABASE_URL =
+  "https://yqyypzqoyhdwuywctyot.supabase.co";
+
+const SUPABASE_ANON_KEY =
+  "sb_publishable_XtBKEaxbFBAIVk4XMNSSjg_Fq4GAGZe";
 
 const supabaseClient =
-window.supabase.createClient(
-SUPABASE_URL,
-SUPABASE_ANON_KEY
-);
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
+
+let selectedTable = null;
 
 async function loadTables() {
-const { data, error } = await supabaseClient
-.from("shop_tables")
-.select("id, table_no, status")
-.order("table_no");
 
-if (error) {
-document.getElementById("message").textContent =
-"Supabase接続エラー: " + error.message;
-return;
+  const { data, error } =
+    await supabaseClient
+      .from("shop_tables")
+      .select("id, table_no, status")
+      .order("table_no");
+
+  if (error) {
+
+    document.getElementById("message").textContent =
+      "Supabase接続エラー: " + error.message;
+
+    return;
+  }
+
+  const container =
+    document.getElementById("tables");
+
+  container.innerHTML = "";
+
+  data.forEach(table => {
+
+    const div =
+      document.createElement("div");
+
+    div.className = "table";
+
+    const status =
+      table.status || "空き";
+
+    div.innerHTML = `
+      <div>卓 ${table.table_no}</div>
+      <div class="status">${status}</div>
+    `;
+
+    div.addEventListener("click", () => {
+      selectTable(table);
+    });
+
+    container.appendChild(div);
+
+  });
+
+  document.getElementById("message").textContent =
+    `${data.length}卓を読み込みました`;
 }
 
-const container = document.getElementById("tables");
-container.innerHTML = "";
+function selectTable(table) {
 
-data.forEach(table => {
-const div = document.createElement("div");
-div.className = "table";
+  selectedTable = table;
 
-div.innerHTML = `
-         <div>卓 ${table.table_no}</div>
-         <div class="status">${table.status}</div>
-       `;
+  document.getElementById("table-screen")
+    .style.display = "none";
 
-        div.addEventListener("click", () => {
-          document.getElementById("message").textContent =
-            `卓 ${table.table_no} を選択しました`;
-        });
+  document.getElementById("order-screen")
+    .style.display = "block";
 
-container.appendChild(div);
-});
+  document.getElementById("selected-table")
+    .textContent =
+      `卓 ${table.table_no} の注文`;
 
-document.getElementById("message").textContent =
-`${data.length}卓を読み込みました`;
+  document.getElementById("message")
+    .textContent =
+      `卓 ${table.table_no} が選択されました`;
+
+  loadMenu();
 }
+
+async function loadMenu() {
+
+  const menu =
+    document.getElementById("menu");
+
+  menu.innerHTML =
+    "メニューを読み込み中…";
+
+  const { data, error } =
+    await supabaseClient
+      .from("menu_items")
+      .select(
+        "id, name, category, size, price, active"
+      )
+      .eq("active", true)
+      .order("id");
+
+  if (error) {
+
+    menu.textContent =
+      "メニュー読み込みエラー: " +
+      error.message;
+
+    return;
+  }
+
+  menu.innerHTML = "";
+
+  data.forEach(item => {
+
+    const div =
+      document.createElement("div");
+
+    div.className = "menu-item";
+
+    div.innerHTML = `
+      <div>
+        ${item.name}
+        ${item.size ? " " + item.size : ""}
+      </div>
+
+      <div class="menu-price">
+        ¥${Number(item.price).toLocaleString()}
+      </div>
+    `;
+
+    div.addEventListener("click", () => {
+
+      document.getElementById("message")
+        .textContent =
+          `${item.name}を追加しました`;
+
+    });
+
+    menu.appendChild(div);
+
+  });
+}
+
+document
+  .getElementById("back-button")
+  .addEventListener("click", () => {
+
+    document.getElementById("order-screen")
+      .style.display = "none";
+
+    document.getElementById("table-screen")
+      .style.display = "block";
+
+    selectedTable = null;
+
+    loadTables();
+
+  });
 
 loadTables();
+
 </script>
 
 </body>
